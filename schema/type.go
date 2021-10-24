@@ -71,10 +71,7 @@ func (i64 int64Type) Type() string {
 }
 
 func (i64 int64Type) Match() bool {
-	if strings.Contains(string(i64), "bigint") {
-		return true
-	}
-	return false
+	return strings.Contains(string(i64), "bigint")
 }
 
 type uint64Type string
@@ -127,7 +124,7 @@ func (i intType) Type() string {
 }
 
 func (i intType) Match() bool {
-	return strings.Contains(string(i), "int")
+	return strings.Contains(string(i), "int") || strings.Contains(string(i), "enum")
 }
 
 type stringType string

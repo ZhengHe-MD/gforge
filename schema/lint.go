@@ -1,11 +1,12 @@
 package schema
 
 import (
-	"unicode"
 	"strings"
+	"unicode"
 )
 
 // lintName returns a different name if it should be different.
+//gocyclo:ignore
 func lintName(name string) (should string) {
 	// Fast path for simple cases: "_" and all lowercase.
 	if name == "_" {

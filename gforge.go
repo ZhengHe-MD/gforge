@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/caibirdme/gforge/internal/dao"
-	"github.com/caibirdme/gforge/internal/schema"
+	"github.com/ZhengHe-MD/gforge/dao"
+	"github.com/ZhengHe-MD/gforge/schema"
 	"github.com/didi/gendry/manager"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mkideal/cli"
@@ -81,10 +81,12 @@ var daoCommand = &cli.Command{
 	Name: "dao",
 	Desc: "dao generates code of dao layer by given table name",
 	Argv: func() interface{} { return new(schemaArg) },
-	Fn: func(ctx *cli.Context) error {
+	Fn: func(ctx *cli.Context) (err error) {
 		arg := ctx.Argv().(*schemaArg)
 		var buff bytes.Buffer
-		io.Copy(&buff, addImport(arg.TableName))
+		if _, err = io.Copy(&buff, addImport(arg.TableName)); err != nil {
+			return
+		}
 		structName, err := getSchema(&buff, arg)
 		if nil != err {
 			return err
@@ -97,8 +99,8 @@ var daoCommand = &cli.Command{
 		if nil != err {
 			return err
 		}
-		io.Copy(os.Stdout, &buff)
-		return nil
+		_, err = io.Copy(os.Stdout, &buff)
+		return
 	},
 }
 

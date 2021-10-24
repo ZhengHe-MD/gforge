@@ -5,7 +5,14 @@ const (
 )
 
 var (
-	typeWrappers = []typeWrapper{i64TypeWrapper, byteTypeWrapper, intTypeWrapper, float64TypeWrapper, stringTypeWrapper, timeTypeWrapper}
+	typeWrappers = []typeWrapper{
+		i64TypeWrapper,
+		byteTypeWrapper,
+		intTypeWrapper,
+		float64TypeWrapper,
+		stringTypeWrapper,
+		timeTypeWrapper,
+	}
 )
 
 // Column stands for a column of a table
@@ -26,7 +33,7 @@ func (c *column) GetType() (string, error) {
 
 //GetName returns the Cammel Name of the struct
 func (c *column) GetName() string {
-	return convertUnderScoreToCammel(c.Name)
+	return convertUnderScoreToCamel(c.Name)
 }
 
 func getType(t string) string {

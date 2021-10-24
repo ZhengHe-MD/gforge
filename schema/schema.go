@@ -13,7 +13,6 @@ import (
 
 const (
 	cDefaultTable = "COLUMNS"
-	cTimeFormat   = "2006-01-02 15:04:05"
 )
 
 type columnSlice []column
@@ -43,7 +42,7 @@ func readTableStruct(db *sql.DB, tableName string, dbName string) (columnSlice, 
 }
 
 func createStructSourceCode(cols columnSlice, tableName string) (io.Reader, string, error) {
-	structName := convertUnderScoreToCammel(tableName)
+	structName := convertUnderScoreToCamel(tableName)
 	fillData := sourceCode{
 		StructName: structName,
 		TableName:  tableName,

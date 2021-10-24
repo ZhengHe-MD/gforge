@@ -2,7 +2,6 @@ package schema
 
 import (
 	"fmt"
-	"os"
 )
 
 const (
@@ -15,13 +14,4 @@ func errUnknownType(columnName, columnType string) error {
 
 func schemaError(errmsg string) error {
 	return fmt.Errorf(errFormat, errmsg)
-}
-
-func checkError(err error, exit bool) {
-	if nil != err {
-		fmt.Printf("%s\n", schemaError(err.Error()))
-	}
-	if exit {
-		os.Exit(1)
-	}
 }
