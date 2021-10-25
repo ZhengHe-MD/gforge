@@ -56,7 +56,7 @@ func createStructSourceCode(cols columnSlice, tableName string) (io.Reader, stri
 		fillData.FieldList[idx] = sourceColumn{
 			Name:      col.GetName(),
 			Type:      colType,
-			StructTag: fmt.Sprintf("`json:\"%s\"`", col.Name),
+			StructTag: fmt.Sprintf("`json:\"%s\" ddb:\"%s\"`", col.Name, col.Name),
 		}
 	}
 	var buff bytes.Buffer
