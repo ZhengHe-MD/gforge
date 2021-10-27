@@ -83,11 +83,11 @@ var daoCommand = &cli.Command{
 	Argv: func() interface{} { return new(schemaArg) },
 	Fn: func(ctx *cli.Context) (err error) {
 		arg := ctx.Argv().(*schemaArg)
-		var buff bytes.Buffer
-		if _, err = io.Copy(&buff, addImport(arg.TableName)); err != nil {
+		var schemaBuff, daoBuff bytes.Buffer
+		if _, err = io.Copy(&daoBuff, addImport(arg.TableName)); err != nil {
 			return
 		}
-		structName, err := getSchema(&buff, arg)
+		structName, err := getSchema(&schemaBuff, arg)
 		if nil != err {
 			return err
 		}
@@ -95,11 +95,11 @@ var daoCommand = &cli.Command{
 		if nil != err {
 			return err
 		}
-		_, err = io.Copy(&buff, r)
+		_, err = io.Copy(&daoBuff, r)
 		if nil != err {
 			return err
 		}
-		_, err = io.Copy(os.Stdout, &buff)
+		_, err = io.Copy(os.Stdout, &daoBuff)
 		return
 	},
 }
