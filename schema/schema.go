@@ -21,6 +21,7 @@ func readTableStruct(db *sql.DB, tableName string, dbName string) (columnSlice, 
 	var where = map[string]interface{}{
 		"TABLE_NAME":   tableName,
 		"TABLE_SCHEMA": dbName,
+		"_orderby":     "ORDINAL_POSITION asc",
 	}
 	var selectFields = []string{"COLUMN_NAME", "COLUMN_TYPE", "COLUMN_COMMENT"}
 	cond, vals, err := builder.BuildSelect(cDefaultTable, where, selectFields)
