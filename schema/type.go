@@ -134,7 +134,7 @@ func (s stringType) Type() string {
 }
 
 func (s stringType) Match() bool {
-	var supportType = []string{"char", "text", "enum"}
+	var supportType = []string{"char", "text", "enum", "json"}
 	ss := string(s)
 	for _, t := range supportType {
 		if strings.Contains(ss, t) {
