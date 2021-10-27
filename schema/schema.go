@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"go/format"
 	"io"
 	"text/template"
 
@@ -62,10 +63,16 @@ func createStructSourceCode(cols columnSlice, tableName string) (io.Reader, stri
 	}
 	var buff bytes.Buffer
 	err := template.Must(template.New("struct").Parse(codeTemplate)).Execute(&buff, fillData)
-	if nil != err {
+	if err != nil {
 		return nil, "", err
 	}
-	return &buff, structName, nil
+
+	formatted, err := format.Source(buff.Bytes())
+	if err != nil {
+		return nil, "", err
+	}
+
+	return bytes.NewBuffer(formatted), structName, nil
 }
 
 type sourceCode struct {
