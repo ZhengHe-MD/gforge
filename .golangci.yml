@@ -1,16 +1,6 @@
 linters:
   enable:
-    - gosimple
-    - govet
     - goimports
-    - deadcode
-    - errcheck
-    - ineffassign
-    - staticcheck
-    - structcheck
-    - typecheck
-    - unused
-    - varcheck
     - misspell
     - gocyclo
 linters-settings:
