@@ -8,6 +8,8 @@ import (
 	"io"
 	"text/template"
 
+	"github.com/iancoleman/strcase"
+
 	"github.com/didi/gendry/builder"
 	"github.com/didi/gendry/scanner"
 )
@@ -58,7 +60,7 @@ func createStructSourceCode(cols columnSlice, tableName string) (io.Reader, stri
 		fillData.FieldList[idx] = sourceColumn{
 			Name:      col.GetName(),
 			Type:      colType,
-			StructTag: fmt.Sprintf("`json:\"%s\" ddb:\"%s\"`", col.Name, col.Name),
+			StructTag: fmt.Sprintf("`json:\"%s\" ddb:\"%s\"`", strcase.ToLowerCamel(col.Name), col.Name),
 		}
 	}
 	var buff bytes.Buffer
@@ -88,7 +90,7 @@ type sourceColumn struct {
 }
 
 const codeTemplate = `
-// {{ .StructName }} is a mapping object for {{ .TableName }} table in mysql
+// {{ .StructName }} is a mapping object for {{ .TableName }} table in mysql.
 type {{.StructName}} struct {
 {{- range .FieldList }}
 	{{ .Name }} {{ .Type }} {{ .StructTag }}

@@ -9,17 +9,15 @@ import (
 
 const (
 	daoCode = `
-//GetOne{{.StructName}} gets one record from table {{.TableName}} by condition "where"
-func GetOne{{.StructName}}(db *sql.DB, where map[string]interface{}) (*domain.{{.StructName}}, error) {
-	if nil == db {
-		return nil, errors.New("sql.DB object couldn't be nil")
-	}
-	cond,vals,err := builder.BuildSelect("{{.TableName}}", where, nil)
-	if nil != err {
+//GetOne{{.StructName}} gets one record from table {{.TableName}} by "where".
+func GetOne{{.StructName}}(ctx context.Context, db *sql.DB, where map[string]interface{}) (*domain.{{.StructName}}, error) {
+	query, args, err := builder.BuildSelect("{{.TableName}}", where, nil)
+	if err != nil {
 		return nil, err
 	}
-	row,err := db.Query(cond, vals...)
-	if nil != err || nil == row {
+	log.WithFields(log.Fields{"query": query, "args": args}).Debugln("GetOne{{.StructName}}")
+	row, err := db.QueryContext(ctx, query, args...)
+	if err != nil || row == nil {
 		return nil, err
 	}
 	defer row.Close()
@@ -28,17 +26,15 @@ func GetOne{{.StructName}}(db *sql.DB, where map[string]interface{}) (*domain.{{
 	return res,err
 }
 
-//GetMulti{{.StructName}} gets multiple records from table {{.TableName}} by condition "where"
-func GetMulti{{.StructName}}(db *sql.DB, where map[string]interface{}) ([]*domain.{{.StructName}}, error) {
-	if nil == db {
-		return nil, errors.New("sql.DB object couldn't be nil")
-	}
-	cond,vals,err := builder.BuildSelect("{{.TableName}}", where, nil)
-	if nil != err {
+//GetMulti{{.StructName}} gets multiple records from table {{.TableName}} by "where".
+func GetMulti{{.StructName}}(ctx context.Context, db *sql.DB, where map[string]interface{}) ([]*domain.{{.StructName}}, error) {
+	query,args,err := builder.BuildSelect("{{.TableName}}", where, nil)
+	if err != nil {
 		return nil, err
 	}
-	row,err := db.Query(cond, vals...)
-	if nil != err || nil == row {
+	log.WithFields(log.Fields{"query": query, "args": args}).Debugln("GetMulti{{.StructName}}")
+	row, err := db.QueryContext(ctx, query, args...)
+	if err != nil || row == nil {
 		return nil, err
 	}
 	defer row.Close()
@@ -47,52 +43,103 @@ func GetMulti{{.StructName}}(db *sql.DB, where map[string]interface{}) ([]*domai
 	return res,err
 }
 
-//Insert{{.StructName}} inserts an array of data into table {{.TableName}}
-func Insert{{.StructName}}(db *sql.DB, data []map[string]interface{}) (int64, error) {
-	if nil == db {
-		return 0, errors.New("sql.DB object couldn't be nil")
-	}
-	cond, vals, err := builder.BuildInsert("{{.TableName}}", data)
-	if nil != err {
+//Insert{{.StructName}} inserts an array of data into table {{.TableName}}.
+func Insert{{.StructName}}(ctx context.Context, db *sql.DB, data []map[string]interface{}) (int64, error) {
+	query, args, err := builder.BuildInsert("{{.TableName}}", data)
+	if err != nil {
 		return 0, err
 	}
-	result,err := db.Exec(cond, vals...)
-	if nil != err || nil == result {
+	log.WithFields(log.Fields{"query": query, "args": args}).Debugln("Insert{{.StructName}}")
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil || result == nil {
 		return 0, err
 	}
 	return result.LastInsertId()
 }
 
-//Update{{.StructName}} updates the table {{.TableName}}
-func Update{{.StructName}}(db *sql.DB, where,data map[string]interface{}) (int64, error) {
-	if nil == db {
-		return 0, errors.New("sql.DB object couldn't be nil")
-	}
-	cond,vals,err := builder.BuildUpdate("{{.TableName}}", where, data)
-	if nil != err {
+//Update{{.StructName}} updates the table {{.TableName}}.
+func Update{{.StructName}}(ctx context.Context, db *sql.DB, where,data map[string]interface{}) (int64, error) {
+	query, args, err := builder.BuildUpdate("{{.TableName}}", where, data)
+	if err != nil {
 		return 0, err
 	}
-	result,err := db.Exec(cond, vals...)
-	if nil != err {
+	log.WithFields(log.Fields{"query": query, "args": args}).Debugln("Update{{.StructName}}")
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
 }
 
-// Delete deletes matched records in {{.TableName}}
-func Delete{{.StructName}}(db *sql.DB, where,data map[string]interface{}) (int64, error) {
-	if nil == db {
-		return 0, errors.New("sql.DB object couldn't be nil")
-	}
-	cond,vals,err := builder.BuildDelete("{{.TableName}}", where)
-	if nil != err {
+// Delete deletes matched records in {{.TableName}}.
+func Delete{{.StructName}}(ctx context.Context, db *sql.DB, where,data map[string]interface{}) (int64, error) {
+	query, args, err := builder.BuildDelete("{{.TableName}}", where)
+	if err != nil {
 		return 0, err
 	}
-	result,err := db.Exec(cond, vals...)
-	if nil != err {
+	log.WithFields(log.Fields{"query": query, "args": args}).Debugln("Delete{{.StructName}}")
+	result,err := db.ExecContext(ctx, query, args...)
+	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+// Upsert insert an record if it's not there, or update existing record otherwise, and returns the record id.
+func Upsert{{.StructName}}(ctx context.Context, db *sql.DB, where, data map[string]interface{}) (int64, error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		if err != nil {
+			if e := tx.Rollback(); e != nil {
+				log.WithField("err", e).Errorln("rollback upsert")
+			}
+			return
+		}
+		if e := tx.Commit(); e != nil {
+			log.WithField("err", e).Errorln("commit upsert")
+		}
+	}()
+	
+	var query string
+	var args []interface{}
+	var result sql.Result
+	var prev domain.{{.StructName}}
+	query, args, err = builder.BuildSelect("{{.TableName}}", where, nil)
+	if err != nil {
+		return 0, err
+	}
+	log.WithFields(log.Fields{"query": query, "args": args}).Debugln("Upsert{{.StructName}}: select")
+	rows, err := tx.QueryContext(ctx, query, args...)
+	if err != nil || rows == nil {
+		return 0, err
+	}
+	err = scanner.Scan(rows, &prev)
+	if err == scanner.ErrEmptyResult {
+		query, args, err = builder.BuildInsert("{{.TableName}}", []map[string]interface{}{data})
+		if err != nil {
+			return 0, err
+		}
+		log.WithFields(log.Fields{"query": query, "args": args}).Debugln("Upsert{{.StructName}}: insert")
+		result, err = tx.ExecContext(ctx, query, args...)
+		if err != nil || result == nil {
+			return 0, err
+		}
+		return result.LastInsertId()
+	}
+	query, args, err = builder.BuildUpdate("{{.TableName}}", where, data)
+	if err != nil {
+		return 0, err
+	}
+	log.WithFields(log.Fields{"query": query, "args": args}).Debugln("Upsert{{.StructName}}: update")
+	result, err = tx.ExecContext(ctx, query, args...)
+	if err != nil || result == nil {
+		return 0, err
+	}
+	_, err = result.RowsAffected()
+	return prev.Id, err
 }
 `
 )
